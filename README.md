@@ -16,6 +16,15 @@ custom domain is needed later, front Cloud Run with a Google Cloud HTTPS
 Load Balancer + Serverless NEG (which does support WebSockets) rather than a
 Firebase Hosting rewrite.
 
+## Documentation
+
+This README covers the basics. For everything else — a guided
+first-time setup, the full system architecture, a plain-English
+glossary, a record of every significant design decision and why it was
+made, a file-by-file explanation of the whole codebase, and step-by-step
+runbooks for deploying, rotating credentials, and troubleshooting — see
+**[`docs/README.md`](docs/README.md)**.
+
 ## How it fits together
 
 - **`app.py`** — Streamlit UI: login/signup screen, then a Kanban-style
