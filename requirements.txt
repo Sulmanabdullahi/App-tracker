@@ -1,0 +1,3 @@
+streamlit>=1.38
+google-cloud-firestore>=2.16
+requests>=2.32
