@@ -1,8 +1,20 @@
 # Application Tracker
 
 A Streamlit app for tracking job applications, backed by Firebase
-(Authentication for login, Firestore for storage) and deployed via Cloud Run
-behind Firebase Hosting.
+(Authentication for login, Firestore for storage) and deployed straight to
+Cloud Run.
+
+The app is served **directly from its Cloud Run URL**, not through Firebase
+Hosting. Streamlit needs a persistent WebSocket (`/_stcore/stream`) to push
+UI updates to the browser, and Firebase Hosting's rewrite proxy to Cloud Run
+doesn't forward the WebSocket upgrade (the handshake comes back as a plain
+`200` instead of `101 Switching Protocols`), so the page never renders past
+an empty shell. This is a known limitation, not a config mistake — see
+[nicegui#3563](https://github.com/zauberzeug/nicegui/discussions/3563) and
+[streamlit#10341](https://github.com/streamlit/streamlit/issues/10341). If a
+custom domain is needed later, front Cloud Run with a Google Cloud HTTPS
+Load Balancer + Serverless NEG (which does support WebSockets) rather than a
+Firebase Hosting rewrite.
 
 ## How it fits together
 
@@ -17,9 +29,8 @@ behind Firebase Hosting.
 - **`firestore.rules`** — denies all *direct* client access to Firestore.
   The Admin SDK (used server-side by this app) bypasses these rules, which
   is the point: clients never talk to Firestore directly.
-- Firebase Hosting has no server to run Python, so `firebase.json` rewrites
-  all traffic to a Cloud Run service running the Docker image built from
-  `Dockerfile`.
+- `Dockerfile` builds the Streamlit app into a container that Cloud Run
+  runs directly; `firebase.json` only manages Auth and Firestore config now.
 
 ## One-time Firebase setup
 
@@ -51,8 +62,11 @@ streamlit run app.py
 
 ## Deploying
 
-The app runs as a container on Cloud Run; Firebase Hosting just proxies to
-it (see the `rewrites` entry in `firebase.json`).
+The app runs as a container on Cloud Run, and is accessed at its Cloud Run
+URL directly (see the note above on why Firebase Hosting isn't used for
+this). `--session-affinity` is required so a browser stays pinned to the
+same instance — otherwise Streamlit's in-memory session state resets on
+every reconnect.
 
 ```bash
 # Build and deploy the container to Cloud Run (uses the attached service
@@ -61,18 +75,16 @@ gcloud run deploy app-tracker \
   --source . \
   --region us-central1 \
   --allow-unauthenticated \
+  --session-affinity \
   --set-env-vars FIREBASE_PROJECT_ID=your-project-id,FIREBASE_API_KEY=your-web-api-key
 
-# Point Firebase Hosting at it.
-npx -y firebase-tools@latest deploy --only hosting,firestore
+# Push updated Firestore rules/indexes.
+npx -y firebase-tools@latest deploy --only firestore
 ```
 
 Make sure the Cloud Run service's service account has the **Cloud
 Datastore User** (or Firebase Admin) IAM role so the Admin SDK can read/write
 Firestore.
-
-If you deploy under a different service name or region, update the
-`hosting.rewrites[0].run` block in `firebase.json` to match.
 
 ## Data model
 

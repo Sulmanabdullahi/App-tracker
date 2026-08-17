@@ -8,22 +8,5 @@
     "providers": {
       "emailPassword": true
     }
-  },
-  "hosting": {
-    "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "run": {
-          "serviceId": "app-tracker",
-          "region": "us-central1"
-        }
-      }
-    ]
   }
 }
