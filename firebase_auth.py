@@ -10,8 +10,6 @@ import os
 import requests
 from firebase_admin import auth as admin_auth
 
-API_KEY = os.environ["FIREBASE_API_KEY"]
-
 _IDENTITY_TOOLKIT_URL = "https://identitytoolkit.googleapis.com/v1/accounts:{endpoint}"
 
 
@@ -19,10 +17,19 @@ class AuthError(Exception):
     pass
 
 
+def _api_key() -> str:
+    try:
+        return os.environ["FIREBASE_API_KEY"]
+    except KeyError:
+        raise AuthError(
+            "FIREBASE_API_KEY is not set — copy .env.example to .env and fill it in"
+        ) from None
+
+
 def _call_identity_toolkit(endpoint: str, payload: dict) -> dict:
     resp = requests.post(
         _IDENTITY_TOOLKIT_URL.format(endpoint=endpoint),
-        params={"key": API_KEY},
+        params={"key": _api_key()},
         json=payload,
         timeout=10,
     )
