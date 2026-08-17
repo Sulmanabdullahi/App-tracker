@@ -18,8 +18,16 @@
 			"dependsOn": [
 				"docker-build"
 			],
-			"python": {
-				"file": "python/analyze.py"
+			"dockerRun": {
+				"ports": [
+					{
+						"containerPort": 8080,
+						"hostPort": 8080
+					}
+				],
+				"envFiles": [
+					"${workspaceFolder}/.env"
+				]
 			}
 		}
 	]

@@ -1,19 +1,12 @@
 {
     "configurations": [
         {
-            "name": "Containers: Python - General",
-            "type": "docker",
+            "name": "Python: Streamlit app",
+            "type": "debugpy",
             "request": "launch",
-            "preLaunchTask": "docker-run: debug",
-            "python": {
-                "pathMappings": [
-                    {
-                        "localRoot": "${workspaceFolder}",
-                        "remoteRoot": "/app"
-                    }
-                ],
-                "projectType": "general"
-            }
+            "module": "streamlit",
+            "args": ["run", "app.py"],
+            "justMyCode": true
         }
     ]
 }

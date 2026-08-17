@@ -1,4 +1,14 @@
 {
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "auth": {
+    "authorizedDomains": ["localhost"],
+    "providers": {
+      "emailPassword": true
+    }
+  },
   "hosting": {
     "public": "public",
     "ignore": [
@@ -9,7 +19,10 @@
     "rewrites": [
       {
         "source": "**",
-        "destination": "/index.html"
+        "run": {
+          "serviceId": "app-tracker",
+          "region": "us-central1"
+        }
       }
     ]
   }
