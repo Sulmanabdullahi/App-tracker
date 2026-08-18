@@ -84,6 +84,9 @@ def render_login():
 
             with tab_signup:
                 with st.form("signup_form"):
+                    name_col1, name_col2 = st.columns(2)
+                    first_name = name_col1.text_input("First name", key="signup_first_name")
+                    last_name = name_col2.text_input("Last name", key="signup_last_name")
                     email = st.text_input(
                         "Email", key="signup_email", placeholder="you@example.com"
                     )
@@ -94,12 +97,14 @@ def render_login():
                         "Create account", type="primary", use_container_width=True
                     )
                     if submitted:
-                        if not email or not password:
-                            st.warning("Enter an email and password.")
+                        if not first_name or not last_name or not email or not password:
+                            st.warning("Fill in your name, email, and password.")
                         else:
                             try:
                                 with st.spinner("Creating your account…"):
-                                    st.session_state.session = firebase_auth.sign_up(email, password)
+                                    st.session_state.session = firebase_auth.sign_up(
+                                        email, password, first_name, last_name
+                                    )
                                 st.rerun()
                             except firebase_auth.AuthError as e:
                                 st.error(str(e))
@@ -111,7 +116,7 @@ def render_dashboard():
     applications = firestore_db.list_applications(uid)
 
     with st.sidebar:
-        st.markdown(f"👋 **{session['email']}**")
+        st.markdown(f"👋 **{session.get('full_name') or session['email']}**")
         st.caption(f"{len(applications)} application{'s' if len(applications) != 1 else ''} tracked")
         st.divider()
         if st.button("🚪 Log out", use_container_width=True):

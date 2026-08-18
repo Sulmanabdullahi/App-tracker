@@ -39,16 +39,18 @@ def _call_identity_toolkit(endpoint: str, payload: dict) -> dict:
     return data
 
 
-def sign_up(email: str, password: str) -> dict:
-    """Create a new user and return {uid, email, id_token, refresh_token}."""
+def sign_up(email: str, password: str, first_name: str, last_name: str) -> dict:
+    """Create a new user and return {uid, email, full_name, id_token, refresh_token}."""
     data = _call_identity_toolkit(
         "signUp", {"email": email, "password": password, "returnSecureToken": True}
     )
-    return _to_session(data)
+    full_name = f"{first_name} {last_name}".strip()
+    admin_auth.update_user(data["localId"], display_name=full_name)
+    return _to_session(data, full_name=full_name)
 
 
 def sign_in(email: str, password: str) -> dict:
-    """Sign in an existing user and return {uid, email, id_token, refresh_token}."""
+    """Sign in an existing user and return {uid, email, full_name, id_token, refresh_token}."""
     data = _call_identity_toolkit(
         "signInWithPassword",
         {"email": email, "password": password, "returnSecureToken": True},
@@ -56,13 +58,16 @@ def sign_in(email: str, password: str) -> dict:
     return _to_session(data)
 
 
-def _to_session(data: dict) -> dict:
+def _to_session(data: dict, full_name: str | None = None) -> dict:
     id_token = data["idToken"]
     # Re-verify server-side rather than trusting the REST response's uid directly.
     decoded = admin_auth.verify_id_token(id_token)
+    if full_name is None:
+        full_name = admin_auth.get_user(decoded["uid"]).display_name or ""
     return {
         "uid": decoded["uid"],
         "email": decoded.get("email", data.get("email")),
+        "full_name": full_name,
         "id_token": id_token,
         "refresh_token": data["refreshToken"],
     }
